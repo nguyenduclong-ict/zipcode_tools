@@ -14,7 +14,9 @@
     "db:migrate:local": "wrangler d1 execute zipcodes-db --local --file=./migrations/0001_initial_schema.sql",
     "db:seed:local": "wrangler d1 execute zipcodes-db --local --file=./data/seed/seed_data.sql",
     "db:migrate:remote": "wrangler d1 execute zipcodes-db --remote --file=./migrations/0001_initial_schema.sql",
-    "db:seed:remote": "wrangler d1 execute zipcodes-db --remote --file=./data/seed/seed_data.sql"
+    "db:seed:remote": "wrangler d1 execute zipcodes-db --remote --file=./data/seed/seed_data.sql",
+    "db:fetch-real": "node scripts/fetch-real-data.mjs",
+    "db:fetch-real:all": "node scripts/fetch-real-data.mjs --all"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

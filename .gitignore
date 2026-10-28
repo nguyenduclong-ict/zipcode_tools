@@ -17,12 +17,13 @@
 /.vercel
 /.wrangler
 
-# local databases
+# local databases & raw data
 *.db
 *.sqlite
 *.sqlite3
 data/zipcodes_local.db
 data/seed/chunks/
+data/raw/
 
 # misc
 .DS_Store

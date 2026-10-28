@@ -40,7 +40,7 @@ describe("Search Service & Utils Tests (TC-001 - TC-018)", () => {
     it("TC-002: Tra cứu chính xác mã bưu chính Việt Nam 10000", async () => {
       const res = await searchZipCodes(db, { query: "10000", country: "VN" });
       expect(res.total).toBeGreaterThan(0);
-      expect(res.results[0].place_name).toBe("Hà Nội");
+      expect(res.results[0].place_name).toContain("Hà Nội");
       expect(res.results[0].country_code).toBe("VN");
     });
 
