@@ -9,10 +9,17 @@ export async function GET() {
     const db = await getDatabase();
     const countries = await getSupportedCountries(db);
 
-    return NextResponse.json({
-      success: true,
-      data: countries,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: countries,
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=43200",
+        },
+      }
+    );
   } catch (error) {
     console.error("API Countries Error:", error);
     return NextResponse.json(

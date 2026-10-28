@@ -20,10 +20,17 @@ export async function GET(request: NextRequest) {
       type,
     });
 
-    return NextResponse.json({
-      success: true,
-      data,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data,
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=43200",
+        },
+      }
+    );
   } catch (error) {
     console.error("API Search Error:", error);
     return NextResponse.json(

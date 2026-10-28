@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 export const runtime = "edge";
+export const revalidate = 86400; // Edge Cache 24 giờ
 
 interface Props {
   params: Promise<{ country: string }>;

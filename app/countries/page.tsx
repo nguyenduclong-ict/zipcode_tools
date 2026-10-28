@@ -4,6 +4,7 @@ import CountriesClient from "@/components/CountriesClient";
 import type { Metadata } from "next";
 
 export const runtime = "edge";
+export const revalidate = 86400; // Edge Cache 24 giờ
 
 export const metadata: Metadata = {
   title: "Supported Countries - ZipCode Tools",
