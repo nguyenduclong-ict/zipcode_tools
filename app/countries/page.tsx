@@ -3,6 +3,8 @@ import { getSupportedCountries } from "@/lib/search-service";
 import CountriesClient from "@/components/CountriesClient";
 import type { Metadata } from "next";
 
+export const runtime = "edge";
+
 export const metadata: Metadata = {
   title: "Supported Countries - ZipCode Tools",
   description: "Browse postal codes and administrative divisions by country on ZipCode Tools.",
