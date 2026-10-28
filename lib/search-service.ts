@@ -10,6 +10,47 @@ function escapeLikePattern(input: string): string {
 }
 
 /**
+ * Chuẩn hóa từ khóa địa danh tiếng Việt và nhận diện tiền tố/viết tắt hành chính
+ */
+function normalizeVietnameseSearch(query: string) {
+  let norm = removeVietnameseTones(query);
+  norm = norm.replace(/[-.,/]/g, " ").replace(/\s+/g, " ").trim();
+
+  // Nhận diện viết tắt các thành phố trực thuộc trung ương phổ biến
+  if (norm === "hcm" || norm === "tp hcm" || norm === "tphcm") {
+    return { primary: "ho chi minh", expanded: "thanh pho ho chi minh", core: "ho chi minh" };
+  }
+  if (norm === "hn" || norm === "tp hn" || norm === "tphn") {
+    return { primary: "ha noi", expanded: "thanh pho ha noi", core: "ha noi" };
+  }
+
+  let core = norm;
+  let expanded = norm;
+
+  if (/^(tp|thanh pho)\s+/i.test(norm)) {
+    core = norm.replace(/^(tp|thanh pho)\s+/i, "").trim();
+    expanded = `thanh pho ${core}`;
+  } else if (/^tinh\s+/i.test(norm)) {
+    core = norm.replace(/^tinh\s+/i, "").trim();
+    expanded = `tinh ${core}`;
+  } else if (/^(huyen|h)\s+/i.test(norm)) {
+    core = norm.replace(/^(huyen|h)\s+/i, "").trim();
+    expanded = `huyen ${core}`;
+  } else if (/^(quan|q)\s+/i.test(norm)) {
+    core = norm.replace(/^(quan|q)\s+/i, "").trim();
+    expanded = `quan ${core}`;
+  } else if (/^(thi xa|tx)\s+/i.test(norm)) {
+    core = norm.replace(/^(thi xa|tx)\s+/i, "").trim();
+    expanded = `thi xa ${core}`;
+  } else if (/^(thi tran|tt)\s+/i.test(norm)) {
+    core = norm.replace(/^(thi tran|tt)\s+/i, "").trim();
+    expanded = `thi tran ${core}`;
+  }
+
+  return { primary: norm, expanded, core };
+}
+
+/**
  * Dịch vụ tra cứu mã bưu chính 2 chiều đa quốc gia
  */
 export async function searchZipCodes(
@@ -21,12 +62,56 @@ export async function searchZipCodes(
   const limit = Math.min(Math.max(params.limit || 20, 1), 50); // BR-002: Max 50
 
   if (!rawQuery) {
+    let results: ZipCodeRecord[] = [];
+    if (country && country !== "ALL") {
+      const sql = `
+        SELECT * FROM zipcodes 
+        WHERE country_code = ? 
+        ORDER BY 
+          CASE 
+            WHEN country_code = 'VN' AND postal_code IN ('10000', '70000', '50000', '04000', '94000', '06000', '03000', '07000', '08000') THEN 0
+            WHEN postal_code LIKE '%000' THEN 1
+            WHEN postal_code LIKE '%00' THEN 2
+            ELSE 3
+          END,
+          postal_code ASC
+        LIMIT ?
+      `;
+      const res = await db.prepare(sql).bind(country, limit).all<ZipCodeRecord>();
+      results = res.results || [];
+    } else {
+      const sql = `
+        SELECT * FROM zipcodes 
+        ORDER BY 
+          CASE country_code 
+            WHEN 'VN' THEN 0 
+            WHEN 'US' THEN 1 
+            WHEN 'JP' THEN 2 
+            WHEN 'GB' THEN 3 
+            WHEN 'FR' THEN 4 
+            WHEN 'DE' THEN 5 
+            WHEN 'CA' THEN 6 
+            WHEN 'AU' THEN 7 
+            ELSE 8 
+          END,
+          CASE 
+            WHEN postal_code LIKE '%000' THEN 0
+            WHEN postal_code LIKE '%00' THEN 1
+            ELSE 2
+          END,
+          postal_code ASC
+        LIMIT ?
+      `;
+      const res = await db.prepare(sql).bind(limit).all<ZipCodeRecord>();
+      results = res.results || [];
+    }
+
     return {
       query: "",
       country,
       detectedType: "code",
-      total: 0,
-      results: [],
+      total: results.length,
+      results,
     };
   }
 
@@ -45,89 +130,204 @@ export async function searchZipCodes(
     // Loại bỏ dấu cách và gạch nối để tìm linh hoạt (Edge Case 1)
     const cleanCode = rawQuery.replace(/[\s-]/g, "");
     const escapedCode = escapeLikePattern(cleanCode);
+    // Hỗ trợ mã bưu chính 6 chữ số cũ của Việt Nam (VD: 100000 -> 10000, 170000 -> 17000)
+    const legacyVn5 = cleanCode.length === 6 && /^\d{6}$/.test(cleanCode) ? cleanCode.slice(0, 5) : "";
 
     if (country && country !== "ALL") {
       const sql = `
         SELECT * FROM zipcodes 
         WHERE country_code = ? 
-          AND (REPLACE(REPLACE(postal_code, ' ', ''), '-', '') LIKE ? ESCAPE '\\')
+          AND ((REPLACE(REPLACE(postal_code, ' ', ''), '-', '') LIKE ? ESCAPE '\\')
+               OR (? != '' AND postal_code = ?))
         ORDER BY 
-          CASE WHEN UPPER(REPLACE(REPLACE(postal_code, ' ', ''), '-', '')) = UPPER(?) THEN 0 ELSE 1 END,
+          CASE 
+            WHEN UPPER(REPLACE(REPLACE(postal_code, ' ', ''), '-', '')) = UPPER(?) THEN 0 
+            WHEN ? != '' AND postal_code = ? THEN 1
+            ELSE 2 
+          END,
           postal_code ASC
         LIMIT ?
       `;
-      const stmt = db.prepare(sql).bind(country, `${escapedCode}%`, cleanCode, limit);
+      const stmt = db.prepare(sql).bind(
+        country,
+        `${escapedCode}%`,
+        legacyVn5,
+        legacyVn5,
+        cleanCode,
+        legacyVn5,
+        legacyVn5,
+        limit
+      );
       const res = await stmt.all<ZipCodeRecord>();
       results = res.results || [];
     } else {
       const sql = `
         SELECT * FROM zipcodes 
-        WHERE REPLACE(REPLACE(postal_code, ' ', ''), '-', '') LIKE ? ESCAPE '\\'
+        WHERE (REPLACE(REPLACE(postal_code, ' ', ''), '-', '') LIKE ? ESCAPE '\\')
+           OR (? != '' AND country_code = 'VN' AND postal_code = ?)
         ORDER BY 
-          CASE WHEN UPPER(REPLACE(REPLACE(postal_code, ' ', ''), '-', '')) = UPPER(?) THEN 0 ELSE 1 END,
+          CASE 
+            WHEN UPPER(REPLACE(REPLACE(postal_code, ' ', ''), '-', '')) = UPPER(?) THEN 0 
+            WHEN ? != '' AND postal_code = ? THEN 1
+            ELSE 2 
+          END,
           country_code ASC,
           postal_code ASC
         LIMIT ?
       `;
-      const stmt = db.prepare(sql).bind(`${escapedCode}%`, cleanCode, limit);
+      const stmt = db.prepare(sql).bind(
+        `${escapedCode}%`,
+        legacyVn5,
+        legacyVn5,
+        cleanCode,
+        legacyVn5,
+        legacyVn5,
+        limit
+      );
       const res = await stmt.all<ZipCodeRecord>();
       results = res.results || [];
     }
   } else {
     // 2. Tìm theo Địa Danh (FR-002)
-    // Chuẩn hóa không dấu cho tiếng Việt và lowercase
-    const normalizedQuery = removeVietnameseTones(rawQuery);
-    const escapedPlace = escapeLikePattern(normalizedQuery);
+    const { primary, expanded, core } = normalizeVietnameseSearch(rawQuery);
+    const escPrimary = escapeLikePattern(primary);
+    const escExpanded = escapeLikePattern(expanded);
+    const escCore = escapeLikePattern(core);
+    const escRaw = escapeLikePattern(rawQuery);
 
     if (country && country !== "ALL") {
       const sql = `
         SELECT * FROM zipcodes 
         WHERE country_code = ? 
           AND (place_name_normalized LIKE ? ESCAPE '\\' 
+               OR place_name_normalized LIKE ? ESCAPE '\\'
+               OR place_name_normalized LIKE ? ESCAPE '\\'
+               OR REPLACE(place_name_normalized, '-', ' ') LIKE ? ESCAPE '\\'
                OR place_name LIKE ? ESCAPE '\\'
-               OR admin_name1 LIKE ? ESCAPE '\\'
-               OR admin_name2 LIKE ? ESCAPE '\\')
+               OR LOWER(admin_name1) LIKE ? ESCAPE '\\'
+               OR REPLACE(LOWER(admin_name1), '-', ' ') LIKE ? ESCAPE '\\'
+               OR LOWER(admin_name2) LIKE ? ESCAPE '\\')
         ORDER BY 
-          CASE WHEN place_name_normalized = ? THEN 0 ELSE 1 END,
-          place_name ASC
+          CASE 
+            -- 0. Khớp chính xác hoàn toàn tên địa danh
+            WHEN place_name_normalized = ? OR place_name_normalized = ? THEN 0
+            
+            -- 1. Bưu cục Trung tâm tỉnh / thành phố khớp với từ khóa
+            WHEN (place_name_normalized LIKE '%buu cuc trung tam%tinh ' || ? 
+               OR place_name_normalized LIKE '%buu cuc trung tam%thanh pho ' || ?
+               OR place_name_normalized LIKE '%buu cuc trung tam%' || ? || '%') THEN 1
+
+            -- 2. Tên bang / tỉnh khớp chính xác từ khóa và mã kết thúc bằng 000
+            WHEN (LOWER(REPLACE(admin_name1, '-', ' ')) = ? OR LOWER(REPLACE(admin_name1, '-', ' ')) LIKE ? || '%') 
+                 AND (postal_code LIKE '%000' OR postal_code LIKE '%0000') THEN 2
+
+            -- 3. Bưu cục trung tâm bất kỳ khớp từ khóa
+            WHEN place_name_normalized LIKE '%trung tam%' AND place_name_normalized LIKE '%' || ? || '%' THEN 3
+
+            -- 4. Bắt đầu bằng từ khóa
+            WHEN place_name_normalized LIKE ? || '%' OR place_name_normalized LIKE ? || '%' THEN 4
+
+            -- 5. Mã kết thúc bằng 000 (mã đại diện cấp tỉnh/thành phố)
+            WHEN postal_code LIKE '%000' THEN 5
+            
+            -- 6. Mã kết thúc bằng 00 (mã đại diện cấp quận/huyện)
+            WHEN postal_code LIKE '%00' THEN 6
+
+            ELSE 7
+          END ASC,
+          CASE WHEN postal_code LIKE '%000' THEN 0 WHEN postal_code LIKE '%00' THEN 1 ELSE 2 END,
+          postal_code ASC
         LIMIT ?
       `;
-      const stmt = db
-        .prepare(sql)
-        .bind(
-          country,
-          `%${escapedPlace}%`,
-          `%${escapedPlace}%`,
-          `%${escapedPlace}%`,
-          `%${escapedPlace}%`,
-          normalizedQuery,
-          limit
-        );
+      const stmt = db.prepare(sql).bind(
+        country,
+        `%${escCore}%`,
+        `%${escExpanded}%`,
+        `%${escPrimary}%`,
+        `%${escCore}%`,
+        `%${escRaw}%`,
+        `%${escCore}%`,
+        `%${escCore}%`,
+        `%${escCore}%`,
+        escPrimary,
+        escExpanded,
+        escCore,
+        escCore,
+        escCore,
+        escCore,
+        escCore,
+        escCore,
+        escCore,
+        escExpanded,
+        limit
+      );
       const res = await stmt.all<ZipCodeRecord>();
       results = res.results || [];
     } else {
       const sql = `
         SELECT * FROM zipcodes 
         WHERE place_name_normalized LIKE ? ESCAPE '\\' 
+           OR place_name_normalized LIKE ? ESCAPE '\\'
+           OR place_name_normalized LIKE ? ESCAPE '\\'
+           OR REPLACE(place_name_normalized, '-', ' ') LIKE ? ESCAPE '\\'
            OR place_name LIKE ? ESCAPE '\\'
-           OR admin_name1 LIKE ? ESCAPE '\\'
-           OR admin_name2 LIKE ? ESCAPE '\\'
+           OR LOWER(admin_name1) LIKE ? ESCAPE '\\'
+           OR REPLACE(LOWER(admin_name1), '-', ' ') LIKE ? ESCAPE '\\'
+           OR LOWER(admin_name2) LIKE ? ESCAPE '\\'
         ORDER BY 
-          CASE WHEN place_name_normalized = ? THEN 0 ELSE 1 END,
+          CASE 
+            -- 0. Khớp chính xác hoàn toàn tên địa danh
+            WHEN place_name_normalized = ? OR place_name_normalized = ? THEN 0
+            
+            -- 1. Bưu cục Trung tâm tỉnh / thành phố khớp với từ khóa
+            WHEN (place_name_normalized LIKE '%buu cuc trung tam%tinh ' || ? 
+               OR place_name_normalized LIKE '%buu cuc trung tam%thanh pho ' || ?
+               OR place_name_normalized LIKE '%buu cuc trung tam%' || ? || '%') THEN 1
+
+            -- 2. Tên bang / tỉnh khớp chính xác từ khóa và mã kết thúc bằng 000
+            WHEN (LOWER(REPLACE(admin_name1, '-', ' ')) = ? OR LOWER(REPLACE(admin_name1, '-', ' ')) LIKE ? || '%') 
+                 AND (postal_code LIKE '%000' OR postal_code LIKE '%0000') THEN 2
+
+            -- 3. Bưu cục trung tâm bất kỳ khớp từ khóa
+            WHEN place_name_normalized LIKE '%trung tam%' AND place_name_normalized LIKE '%' || ? || '%' THEN 3
+
+            -- 4. Bắt đầu bằng từ khóa
+            WHEN place_name_normalized LIKE ? || '%' OR place_name_normalized LIKE ? || '%' THEN 4
+
+            -- 5. Mã kết thúc bằng 000 (mã đại diện cấp tỉnh/thành phố)
+            WHEN postal_code LIKE '%000' THEN 5
+            
+            -- 6. Mã kết thúc bằng 00 (mã đại diện cấp quận/huyện)
+            WHEN postal_code LIKE '%00' THEN 6
+
+            ELSE 7
+          END ASC,
+          CASE WHEN postal_code LIKE '%000' THEN 0 WHEN postal_code LIKE '%00' THEN 1 ELSE 2 END,
           country_code ASC,
-          place_name ASC
+          postal_code ASC
         LIMIT ?
       `;
-      const stmt = db
-        .prepare(sql)
-        .bind(
-          `%${escapedPlace}%`,
-          `%${escapedPlace}%`,
-          `%${escapedPlace}%`,
-          `%${escapedPlace}%`,
-          normalizedQuery,
-          limit
-        );
+      const stmt = db.prepare(sql).bind(
+        `%${escCore}%`,
+        `%${escExpanded}%`,
+        `%${escPrimary}%`,
+        `%${escCore}%`,
+        `%${escRaw}%`,
+        `%${escCore}%`,
+        `%${escCore}%`,
+        `%${escCore}%`,
+        escPrimary,
+        escExpanded,
+        escCore,
+        escCore,
+        escCore,
+        escCore,
+        escCore,
+        escCore,
+        escCore,
+        escExpanded,
+        limit
+      );
       const res = await stmt.all<ZipCodeRecord>();
       results = res.results || [];
     }

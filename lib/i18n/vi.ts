@@ -7,24 +7,25 @@ export const vi: TranslationDictionary = {
   },
   home: {
     heroTitlePrefix: "Tra Cứu Mã Bưu Chính",
-    heroTitleHighlight: "2 Chiều Toàn Cầu",
+    heroTitleHighlight: "Toàn Cầu",
     heroSubtitle:
-      "Nhập mã bưu chính để tìm địa danh, hoặc gõ tên tỉnh/thành phố để tra cứu mã Zip code. Dữ liệu chuẩn hóa quốc tế và mã 5 số Việt Nam.",
+      "Tra cứu hai chiều chuẩn xác: nhập mã bưu chính để xác định phân cấp hành chính, hoặc gõ tên tỉnh/thành phố để tra cứu mã Zip code tương ứng.",
     popularCountries: "Quốc gia phổ biến:",
-    features: {
-      biDirectionalTitle: "Tra Cứu 2 Chiều Linh Hoạt",
-      biDirectionalDesc:
-        "Tự động nhận diện chuỗi tìm kiếm. Tìm từ mã ra địa chỉ, hoặc từ tên xã/phường/thành phố ra mã tương ứng.",
-      globalDbTitle: "Kho Dữ Liệu Toàn Cầu",
-      globalDbDesc:
-        "Hàng trăm ngàn bản ghi mã bưu chính chuẩn hóa quốc tế (GeoNames) và mã bưu chính 5 số mới nhất của VNPost.",
-      securityTitle: "Nhanh Chóng & Bảo Mật",
-      securityDesc:
-        "Tốc độ truy vấn dưới mili-giây với chỉ mục B-Tree. An toàn tuyệt đối chống SQL Injection và không phụ thuộc bên ngoài.",
-    },
+    statsHeadline: "Hơn 330.000 bản ghi mã bưu chính",
+    statsSub: "Dữ liệu chuẩn hóa quốc tế và bộ mã bưu chính 5 số Việt Nam, sẵn sàng tra cứu tức thì.",
+    guideTitle: "Nguyên Lý Tra Cứu 2 Chiều",
+    guideByCodeTitle: "Tra cứu theo Mã Bưu Chính",
+    guideByCodeDesc:
+      "Nhập mã bưu chính bất kỳ (VD: 10000, 90210, 75001, SW1A 1AA) để hiển thị chi tiết tên bưu cục, tỉnh/thành, quận/huyện và tọa độ.",
+    guideByPlaceTitle: "Tra cứu theo Tên Địa Danh",
+    guideByPlaceDesc:
+      "Nhập tên tỉnh, thành phố, quận huyện hoặc phường xã (hỗ trợ cả tiếng Việt có dấu và không dấu) để tìm các mã bưu chính liên quan.",
+    formatsTitle: "Cấu Trúc Mã Bưu Chính Theo Quốc Gia",
+    formatsDesc: "Quy chuẩn định dạng mã bưu chính các thị trường phổ biến phục vụ đóng gói và gửi hàng.",
+    browseAllBtn: "Xem toàn bộ danh mục quốc gia →",
   },
   search: {
-    allCountries: "🌐 Tất cả quốc gia",
+    allCountries: "Tất cả quốc gia",
     placeholderDefault:
       "Nhập mã Zip code hoặc tên địa danh (VD: 90210, 10000, Hà Nội, Tokyo)...",
     placeholderCountry: (countryName: string, example: string) =>
@@ -37,20 +38,20 @@ export const vi: TranslationDictionary = {
     emptyTitle: "Không tìm thấy mã bưu chính phù hợp",
     emptyDesc: (query: string, country?: string) =>
       `Không có kết quả nào cho từ khóa "${query}"${country ? ` trong quốc gia ${country}` : ""}.`,
-    emptyTipsHeader: "💡 Gợi ý tra cứu:",
-    emptyTip1: "• Kiểm tra lại lỗi chính tả hoặc khoảng trắng",
-    emptyTip2: "• Chuyển bộ lọc sang '🌐 Tất cả quốc gia' để mở rộng phạm vi tìm kiếm",
-    emptyTip3: "• Thử gõ tên tỉnh/thành phố lớn (VD: Hà Nội, Hồ Chí Minh, New York, Tokyo)",
+    emptyTipsHeader: "Gợi ý tra cứu:",
+    emptyTip1: "Kiểm tra lại lỗi chính tả hoặc khoảng trắng",
+    emptyTip2: "Chuyển bộ lọc sang 'Tất cả quốc gia' để mở rộng phạm vi tìm kiếm",
+    emptyTip3: "Thử tìm theo tên trung tâm hành chính (VD: Hà Nội, London, New York, Tokyo)",
   },
   card: {
     copyCode: "Sao chép mã",
-    copied: "Đã sao chép!",
+    copied: "Đã sao chép",
     copyAddress: "Sao chép địa chỉ",
-    state: "Bang/Tỉnh:",
-    district: "Quận/Huyện:",
-    ward: "Phường/Xã:",
+    state: "Bang / Tỉnh:",
+    district: "Quận / Huyện:",
+    ward: "Phường / Xã:",
     coordinates: "Tọa độ:",
-    coordsPending: "Tọa độ: Đang cập nhật",
+    coordsPending: "Đang cập nhật tọa độ",
     viewDetails: "Chi tiết →",
     backToCountry: (country: string) => `Quay lại danh mục ${country}`,
     openInMaps: "Mở trên Google Maps ↗",
@@ -58,7 +59,7 @@ export const vi: TranslationDictionary = {
   },
   countries: {
     badge: "Danh Mục Quốc Tế",
-    title: "Các Quốc Gia Được Hỗ Trợ Tra Cứu",
+    title: "Danh Mục Quốc Gia & Quy Chuẩn Định Dạng",
     subtitle: "Duyệt danh mục mã bưu chính và cấu trúc phân cấp hành chính theo từng quốc gia.",
     exampleCode: "Mã mẫu:",
     format: "Định dạng:",

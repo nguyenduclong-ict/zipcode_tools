@@ -95,6 +95,90 @@ describe("Search Service & Utils Tests (TC-001 - TC-018)", () => {
       expect(res.total).toBeGreaterThan(0);
       expect(res.results.some((r) => r.place_name.toLowerCase().includes("los angeles"))).toBe(true);
     });
+
+    it("TC-019: Tra cứu tên tỉnh Hưng Yên trả về mã đại diện 17000 ở vị trí đầu tiên", async () => {
+      const res = await searchZipCodes(db, { query: "Hưng Yên", country: "VN" });
+      expect(res.total).toBeGreaterThan(0);
+      expect(res.results[0].postal_code).toBe("17000");
+      expect(res.results[0].place_name).toContain("Trung tâm tỉnh Hưng Yên");
+    });
+
+    it("TC-020: Hỗ trợ mã bưu chính 6 chữ số cũ của Việt Nam (100000 -> 10000, 170000 -> 17000)", async () => {
+      const res1 = await searchZipCodes(db, { query: "100000", country: "VN" });
+      expect(res1.total).toBeGreaterThan(0);
+      expect(res1.results[0].postal_code).toBe("10000");
+
+      const res2 = await searchZipCodes(db, { query: "170000", country: "VN" });
+      expect(res2.total).toBeGreaterThan(0);
+      expect(res2.results.some((r) => r.postal_code === "17000")).toBe(true);
+    });
+
+    it("TC-021: Tra cứu tỉnh Thái Bình và TP Thái Bình trả về mã đại diện 06000 ở vị trí đầu", async () => {
+      const res1 = await searchZipCodes(db, { query: "Thái Bình", country: "VN" });
+      expect(res1.total).toBeGreaterThan(0);
+      expect(res1.results[0].postal_code).toBe("06000");
+      expect(res1.results[0].place_name).toContain("Thái Bình");
+
+      const res2 = await searchZipCodes(db, { query: "tp thái bình", country: "VN" });
+      expect(res2.total).toBeGreaterThan(0);
+      expect(res2.results[0].postal_code).toBe("06000");
+    });
+
+    it("TC-022: Tra cứu tỉnh Hải Dương và TP Hải Dương trả về mã đại diện 03000 ở vị trí đầu", async () => {
+      const res = await searchZipCodes(db, { query: "Hải Dương", country: "VN" });
+      expect(res.total).toBeGreaterThan(0);
+      expect(res.results[0].postal_code).toBe("03000");
+      expect(res.results[0].place_name).toContain("Hải Dương");
+    });
+
+    it("TC-023: Tra cứu tỉnh Nam Định trả về mã đại diện 07000 ở vị trí đầu", async () => {
+      const res = await searchZipCodes(db, { query: "Nam Định", country: "VN" });
+      expect(res.total).toBeGreaterThan(0);
+      expect(res.results[0].postal_code).toBe("07000");
+      expect(res.results[0].place_name).toContain("Nam Định");
+    });
+
+    it("TC-024: Tra cứu tỉnh Ninh Bình trả về mã đại diện 08000 ở vị trí đầu", async () => {
+      const res = await searchZipCodes(db, { query: "Ninh Bình", country: "VN" });
+      expect(res.total).toBeGreaterThan(0);
+      expect(res.results[0].postal_code).toBe("08000");
+      expect(res.results[0].place_name).toContain("Ninh Bình");
+    });
+
+    it("TC-025: Tra cứu Bà Rịa Vũng Tàu không dấu/có dấu trả về mã đại diện 78000 ở vị trí đầu", async () => {
+      const res1 = await searchZipCodes(db, { query: "Bà Rịa Vũng Tàu", country: "VN" });
+      expect(res1.total).toBeGreaterThan(0);
+      expect(res1.results[0].postal_code).toBe("78000");
+
+      const res2 = await searchZipCodes(db, { query: "ba ria vung tau", country: "VN" });
+      expect(res2.total).toBeGreaterThan(0);
+      expect(res2.results[0].postal_code).toBe("78000");
+    });
+
+    it("TC-026: Tra cứu Thừa Thiên Huế trả về mã đại diện 49000 ở vị trí đầu", async () => {
+      const res = await searchZipCodes(db, { query: "Thừa Thiên Huế", country: "VN" });
+      expect(res.total).toBeGreaterThan(0);
+      expect(res.results[0].postal_code).toBe("49000");
+      expect(res.results[0].place_name).toContain("Thừa Thiên Huế");
+    });
+
+    it("TC-027: Tra cứu khi không nhập từ khóa (empty query) trả về danh sách mã bưu chính tương ứng", async () => {
+      // 1. Khi chọn quốc gia VN
+      const resVn = await searchZipCodes(db, { query: "", country: "VN", limit: 10 });
+      expect(resVn.total).toBeGreaterThan(0);
+      expect(resVn.results.length).toBeLessThanOrEqual(10);
+      expect(resVn.results.every((r) => r.country_code === "VN")).toBe(true);
+
+      // 2. Khi chọn quốc gia US
+      const resUs = await searchZipCodes(db, { query: "", country: "US", limit: 10 });
+      expect(resUs.total).toBeGreaterThan(0);
+      expect(resUs.results.every((r) => r.country_code === "US")).toBe(true);
+
+      // 3. Khi không chọn quốc gia (Tất cả quốc gia)
+      const resAll = await searchZipCodes(db, { query: "", country: "", limit: 10 });
+      expect(resAll.total).toBeGreaterThan(0);
+      expect(resAll.results.length).toBeLessThanOrEqual(10);
+    });
   });
 
   describe("Security & Edge Cases (TC-014 - TC-017)", () => {

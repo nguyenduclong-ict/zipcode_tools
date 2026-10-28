@@ -10,14 +10,16 @@ export interface TranslationDictionary {
     heroTitleHighlight: string;
     heroSubtitle: string;
     popularCountries: string;
-    features: {
-      biDirectionalTitle: string;
-      biDirectionalDesc: string;
-      globalDbTitle: string;
-      globalDbDesc: string;
-      securityTitle: string;
-      securityDesc: string;
-    };
+    statsHeadline: string;
+    statsSub: string;
+    guideTitle: string;
+    guideByCodeTitle: string;
+    guideByCodeDesc: string;
+    guideByPlaceTitle: string;
+    guideByPlaceDesc: string;
+    formatsTitle: string;
+    formatsDesc: string;
+    browseAllBtn: string;
   };
   search: {
     allCountries: string;

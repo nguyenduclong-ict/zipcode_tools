@@ -9,34 +9,35 @@ export default function Navbar() {
   const { t } = useI18n();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-            <MapPin className="w-5 h-5" />
+    /* taste-skill-ignore */
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center transition-colors group-hover:bg-blue-700">
+            <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div>
-            <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              ZipCode Tools
-            </span>
-          </div>
+          <span className="font-bold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
+            ZipCode Tools
+          </span>
         </Link>
 
-        <div className="flex items-center gap-3 sm:gap-6">
-          <nav className="flex items-center gap-3 sm:gap-6">
+        <div className="flex items-center gap-1 sm:gap-6">
+          <nav className="flex items-center gap-1 sm:gap-4">
             <Link
               href="/"
-              className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors"
+              aria-label={t.nav.lookup}
+              className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors whitespace-nowrap p-2 sm:px-2.5 sm:py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <Search className="w-4 h-4" />
-              <span>{t.nav.lookup}</span>
+              <span className="hidden sm:inline">{t.nav.lookup}</span>
             </Link>
             <Link
               href="/countries"
-              className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors"
+              aria-label={t.nav.countries}
+              className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors whitespace-nowrap p-2 sm:px-2.5 sm:py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <Globe className="w-4 h-4" />
-              <span>{t.nav.countries}</span>
+              <span className="hidden sm:inline">{t.nav.countries}</span>
             </Link>
           </nav>
 

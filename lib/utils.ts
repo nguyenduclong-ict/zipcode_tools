@@ -18,7 +18,8 @@ export function removeVietnameseTones(str: string): string {
   str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "u");
   str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "y");
   str = str.replace(/Đ/g, "d");
-  return str.toLowerCase().trim();
+  str = str.replace(/[-_]/g, " ");
+  return str.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
 /**

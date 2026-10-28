@@ -34,5 +34,20 @@ export default async function CountryDetailPage({ params }: Props) {
     notFound();
   }
 
-  return <HomeClient initialCountries={countries} />;
+  // Pre-fetch dữ liệu mã bưu chính đại diện của quốc gia để render ngay trên server
+  const initialData = await searchZipCodes(db, {
+    query: "",
+    country: found.code,
+    limit: 50,
+  });
+
+  return (
+    <HomeClient
+      initialCountries={countries}
+      initialCountry={found.code}
+      initialResults={initialData.results}
+      initialTotal={initialData.total}
+      initialHasSearched={true}
+    />
+  );
 }
