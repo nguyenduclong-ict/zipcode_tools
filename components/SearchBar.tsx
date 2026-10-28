@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CountryRecord, ZipCodeRecord } from "@/lib/types";
 import CountrySelector, { getCountryFlag } from "./CountrySelector";
 import { Search, Loader2, MapPin, X } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 interface SearchBarProps {
   countries: CountryRecord[];
@@ -18,6 +19,7 @@ export default function SearchBar({
   initialCountry = "",
   onSearch,
 }: SearchBarProps) {
+  const { lang, t } = useI18n();
   const [query, setQuery] = useState(initialQuery);
   const [country, setCountry] = useState(initialCountry);
   const [suggestions, setSuggestions] = useState<ZipCodeRecord[]>([]);
@@ -30,9 +32,15 @@ export default function SearchBar({
 
   // Tìm placeholder mẫu theo quốc gia được chọn
   const selectedCountryObj = countries.find((c) => c.code === country);
+  const countryDisplayName = selectedCountryObj
+    ? lang === "vi"
+      ? (selectedCountryObj.native_name || selectedCountryObj.name)
+      : selectedCountryObj.name
+    : "";
+
   const placeholderText = selectedCountryObj
-    ? `Tra cứu mã bưu chính ${selectedCountryObj.name} (VD: ${selectedCountryObj.postal_code_example})...`
-    : "Nhập mã Zip code hoặc tên địa danh (VD: 90210, 10000, Hà Nội, Tokyo)...";
+    ? t.search.placeholderCountry(countryDisplayName, selectedCountryObj.postal_code_example)
+    : t.search.placeholderDefault;
 
   // Debounced Autocomplete Fetcher (250ms)
   useEffect(() => {
@@ -49,7 +57,7 @@ export default function SearchBar({
         const params = new URLSearchParams({
           q: trimmed,
           country: country || "",
-          limit: "8", // BR-002: max 8 for autocomplete
+          limit: "8",
         });
         const res = await fetch(`/api/v1/search?${params.toString()}`);
         if (res.ok) {
@@ -93,7 +101,6 @@ export default function SearchBar({
     onSearch(item.postal_code, item.country_code);
   };
 
-  // Bàn phím điều hướng (ArrowUp, ArrowDown, Enter, Escape)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!showDropdown || suggestions.length === 0) {
       if (e.key === "Enter") handleSubmit();
@@ -176,15 +183,15 @@ export default function SearchBar({
           className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 whitespace-nowrap"
         >
           <Search className="w-4 h-4" />
-          <span>Tra Cứu</span>
+          <span>{t.search.searchBtn}</span>
         </button>
       </form>
 
-      {/* Popover gợi ý tức thì (Autocomplete) */}
+      {/* Popover gợi ý tức thì */}
       {showDropdown && suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
-            Gợi ý tra cứu nhanh
+            {t.search.autocompleteHeader}
           </div>
           <ul className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
             {suggestions.map((item, idx) => (
@@ -220,7 +227,9 @@ export default function SearchBar({
                     </div>
                   </div>
                 </div>
-                <span className="text-xs text-slate-400 hidden sm:inline-block">Chọn ↵</span>
+                <span className="text-xs text-slate-400 hidden sm:inline-block">
+                  {t.search.selectHint}
+                </span>
               </li>
             ))}
           </ul>

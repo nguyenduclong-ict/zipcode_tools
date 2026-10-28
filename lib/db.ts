@@ -5,29 +5,8 @@ export * from "./db-types";
 let localNodeSqliteDb: unknown = null;
 
 function getLocalNodeDatabase(): IDatabase {
-  if (typeof process !== "undefined" && process.env.NEXT_RUNTIME === "edge") {
-    // Trong môi trường Edge, trả về mock an toàn nếu không tìm thấy Cloudflare binding
-    return {
-      prepare() {
-        return {
-          bind() {
-            return this;
-          },
-          async all<T>() {
-            return { results: [] as T[], success: true };
-          },
-          async first<T>() {
-            return null;
-          },
-        };
-      },
-    };
-  }
-
   if (!localNodeSqliteDb) {
     try {
-      // Dùng eval('require') để Webpack không trace và bundle node:sqlite vào Edge bundle
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
       const dynamicRequire = eval("require");
       const { DatabaseSync } = dynamicRequire("node:sqlite");
       const path = dynamicRequire("path");
@@ -76,7 +55,8 @@ function getLocalNodeDatabase(): IDatabase {
           if (!rawDb) return { results: [] as T[], success: true };
           try {
             const stmt = rawDb.prepare(sql);
-            const results = stmt.all(...boundValues) as T[];
+            const rawRows = stmt.all(...boundValues) as Record<string, unknown>[];
+            const results = rawRows.map((r) => ({ ...r })) as T[];
             return { results, success: true };
           } catch (err) {
             console.error("Lỗi truy vấn SQL local:", err);
@@ -90,7 +70,7 @@ function getLocalNodeDatabase(): IDatabase {
             const rows = stmt.all(...boundValues) as Record<string, unknown>[];
             if (!rows || rows.length === 0) return null;
             if (colName) return (rows[0][colName] as T) ?? null;
-            return (rows[0] as unknown as T) ?? null;
+            return { ...(rows[0] as object) } as unknown as T;
           } catch {
             return null;
           }

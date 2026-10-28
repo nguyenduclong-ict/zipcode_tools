@@ -5,13 +5,15 @@ import { CountryRecord, SearchResponseData, ZipCodeRecord } from "@/lib/types";
 import SearchBar from "@/components/SearchBar";
 import ResultList from "@/components/ResultList";
 import { getCountryFlag } from "@/components/CountrySelector";
-import { Zap, ShieldCheck, Database, Search } from "lucide-react";
+import { Search, Database, ShieldCheck } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 interface HomeClientProps {
   initialCountries: CountryRecord[];
 }
 
 export default function HomeClient({ initialCountries }: HomeClientProps) {
+  const { lang, t } = useI18n();
   const [results, setResults] = useState<ZipCodeRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [currentQuery, setCurrentQuery] = useState("");
@@ -54,28 +56,22 @@ export default function HomeClient({ initialCountries }: HomeClientProps) {
 
   const handleQuickCountry = (code: string) => {
     setCurrentCountry(code);
-    handleSearch(currentQuery || "Hà Nội", code);
+    handleSearch(currentQuery || (code === "VN" ? "Hà Nội" : "90210"), code);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-      {/* Hero Header */}
+      {/* Hero Header (Đã loại bỏ badge vô nghĩa về serverless/sqlite) */}
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-semibold mb-4">
-          <Zap className="w-3.5 h-3.5" />
-          <span>Serverless SQLite trên Cloudflare Edge • Phản hồi &lt; 50ms</span>
-        </div>
-
         <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight leading-tight sm:leading-tight mb-4">
-          Tra Cứu Mã Bưu Chính{" "}
+          {t.home.heroTitlePrefix}{" "}
           <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            2 Chiều Toàn Cầu
+            {t.home.heroTitleHighlight}
           </span>
         </h1>
 
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400">
-          Nhập mã bưu chính để tìm địa danh, hoặc gõ tên tỉnh/thành phố để tra cứu mã Zip code.
-          Dữ liệu chuẩn hóa quốc tế và mã 5 số Việt Nam.
+          {t.home.heroSubtitle}
         </p>
       </div>
 
@@ -88,16 +84,16 @@ export default function HomeClient({ initialCountries }: HomeClientProps) {
 
       {/* Quick Country Filter Pills */}
       <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
-        <span className="text-xs font-medium text-slate-400 mr-1">Quốc gia phổ biến:</span>
+        <span className="text-xs font-medium text-slate-400 mr-1">{t.home.popularCountries}</span>
         {[
-          { code: "VN", name: "Việt Nam" },
-          { code: "US", name: "Hoa Kỳ" },
-          { code: "GB", name: "Anh" },
-          { code: "CA", name: "Canada" },
-          { code: "JP", name: "Nhật Bản" },
-          { code: "FR", name: "Pháp" },
-          { code: "DE", name: "Đức" },
-          { code: "AU", name: "Úc" },
+          { code: "VN", nameEn: "Vietnam", nameVi: "Việt Nam" },
+          { code: "US", nameEn: "United States", nameVi: "Hoa Kỳ" },
+          { code: "GB", nameEn: "United Kingdom", nameVi: "Anh" },
+          { code: "CA", nameEn: "Canada", nameVi: "Canada" },
+          { code: "JP", nameEn: "Japan", nameVi: "Nhật Bản" },
+          { code: "FR", nameEn: "France", nameVi: "Pháp" },
+          { code: "DE", nameEn: "Germany", nameVi: "Đức" },
+          { code: "AU", nameEn: "Australia", nameVi: "Úc" },
         ].map((item) => (
           <button
             key={item.code}
@@ -106,7 +102,7 @@ export default function HomeClient({ initialCountries }: HomeClientProps) {
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-600 text-slate-700 dark:text-slate-300 transition-all hover:scale-105"
           >
             <span>{getCountryFlag(item.code)}</span>
-            <span>{item.name}</span>
+            <span>{lang === "vi" ? item.nameVi : item.nameEn}</span>
           </button>
         ))}
       </div>
@@ -128,10 +124,10 @@ export default function HomeClient({ initialCountries }: HomeClientProps) {
               <Search className="w-6 h-6" />
             </div>
             <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100 mb-2">
-              Tra Cứu 2 Chiều Linh Hoạt
+              {t.home.features.biDirectionalTitle}
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              Tự động nhận diện chuỗi tìm kiếm. Tìm từ mã ra địa chỉ, hoặc từ tên xã/phường/thành phố ra mã tương ứng.
+              {t.home.features.biDirectionalDesc}
             </p>
           </div>
 
@@ -140,10 +136,10 @@ export default function HomeClient({ initialCountries }: HomeClientProps) {
               <Database className="w-6 h-6" />
             </div>
             <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100 mb-2">
-              Kho Dữ Liệu Toàn Cầu
+              {t.home.features.globalDbTitle}
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              Hơn 1.200.000 bản ghi mã bưu chính chuẩn hóa quốc tế (GeoNames) và mã bưu chính 5 số mới nhất của VNPost.
+              {t.home.features.globalDbDesc}
             </p>
           </div>
 
@@ -152,10 +148,10 @@ export default function HomeClient({ initialCountries }: HomeClientProps) {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100 mb-2">
-              Độc Lập & Bảo Mật
+              {t.home.features.securityTitle}
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              Vận hành 100% trên Cloudflare D1. Không phụ thuộc vào API bên ngoài, chống SQL Injection với Prepared Statements.
+              {t.home.features.securityDesc}
             </p>
           </div>
         </div>

@@ -1,15 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import { ZipCodeRecord } from "@/lib/types";
 import { formatAddress } from "@/lib/utils";
 import CopyButton from "./CopyButton";
 import { getCountryFlag } from "./CountrySelector";
 import { MapPin, Navigation } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 interface ResultCardProps {
   item: ZipCodeRecord;
 }
 
 export default function ResultCard({ item }: ResultCardProps) {
+  const { t } = useI18n();
   const fullAddress = formatAddress(item);
 
   return (
@@ -20,7 +24,7 @@ export default function ResultCard({ item }: ResultCardProps) {
             <span className="text-xl font-bold font-mono text-blue-600 dark:text-blue-400 tracking-wider">
               {item.postal_code}
             </span>
-            <CopyButton textToCopy={item.postal_code} label="Sao chép mã" />
+            <CopyButton textToCopy={item.postal_code} label={t.card.copyCode} />
           </div>
 
           <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
@@ -41,16 +45,16 @@ export default function ResultCard({ item }: ResultCardProps) {
         {/* Thông tin phân cấp hành chính chi tiết */}
         <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 dark:text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-800/80">
           <div>
-            <span className="font-medium text-slate-700 dark:text-slate-300">Bang/Tỉnh: </span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">{t.card.state} </span>
             {item.admin_name1 || "—"} {item.admin_code1 ? `(${item.admin_code1})` : ""}
           </div>
           <div>
-            <span className="font-medium text-slate-700 dark:text-slate-300">Quận/Huyện: </span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">{t.card.district} </span>
             {item.admin_name2 || "—"}
           </div>
           {item.admin_name3 && (
             <div className="col-span-2">
-              <span className="font-medium text-slate-700 dark:text-slate-300">Phường/Xã: </span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">{t.card.ward} </span>
               {item.admin_name3}
             </div>
           )}
@@ -67,7 +71,7 @@ export default function ResultCard({ item }: ResultCardProps) {
               </span>
             </>
           ) : (
-            <span>Tọa độ: Đang cập nhật</span>
+            <span>{t.card.coordsPending}</span>
           )}
         </div>
 
@@ -75,7 +79,7 @@ export default function ResultCard({ item }: ResultCardProps) {
           href={`/zip/${item.country_code.toLowerCase()}/${encodeURIComponent(item.postal_code)}`}
           className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
         >
-          Chi tiết →
+          {t.card.viewDetails}
         </Link>
       </div>
     </div>

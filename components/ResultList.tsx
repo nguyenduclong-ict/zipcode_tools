@@ -1,6 +1,9 @@
+"use client";
+
 import { ZipCodeRecord } from "@/lib/types";
 import ResultCard from "./ResultCard";
 import { SearchX } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 interface ResultListProps {
   results: ZipCodeRecord[];
@@ -17,6 +20,8 @@ export default function ResultList({
   country,
   loading,
 }: ResultListProps) {
+  const { t } = useI18n();
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
@@ -44,17 +49,16 @@ export default function ResultList({
           <SearchX className="w-7 h-7" />
         </div>
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-          Không tìm thấy mã bưu chính phù hợp
+          {t.search.emptyTitle}
         </h3>
         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-4">
-          Không có kết quả nào cho từ khóa &quot;<strong>{query}</strong>&quot;
-          {country ? ` trong quốc gia ${country}` : ""}.
+          {t.search.emptyDesc(query, country)}
         </p>
         <div className="text-xs text-slate-400 dark:text-slate-500 space-y-1">
-          <p>💡 Gợi ý tra cứu:</p>
-          <p>• Kiểm tra lại lỗi chính tả hoặc khoảng trắng</p>
-          <p>• Chuyển bộ lọc sang &quot;🌐 Tất cả quốc gia&quot; để mở rộng phạm vi tìm kiếm</p>
-          <p>• Thử gõ tên tỉnh/thành phố lớn (VD: Hà Nội, Hồ Chí Minh, New York, Tokyo)</p>
+          <p>{t.search.emptyTipsHeader}</p>
+          <p>{t.search.emptyTip1}</p>
+          <p>{t.search.emptyTip2}</p>
+          <p>{t.search.emptyTip3}</p>
         </div>
       </div>
     );
@@ -68,8 +72,7 @@ export default function ResultList({
     <div className="mt-8">
       <div className="flex items-center justify-between mb-4 px-1">
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Tìm thấy <strong className="text-slate-900 dark:text-slate-100">{total}</strong> kết quả
-          {query ? ` cho "${query}"` : ""}
+          {t.search.foundResults(total, query)}
         </p>
       </div>
 

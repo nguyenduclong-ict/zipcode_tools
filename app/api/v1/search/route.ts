@@ -2,8 +2,6 @@ import { getDatabase } from "@/lib/db";
 import { searchZipCodes } from "@/lib/search-service";
 import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = "edge";
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

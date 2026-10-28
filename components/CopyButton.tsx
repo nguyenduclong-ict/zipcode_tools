@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 interface CopyButtonProps {
   textToCopy: string;
@@ -11,6 +12,7 @@ interface CopyButtonProps {
 
 export default function CopyButton({ textToCopy, label, className = "" }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
+  const { t } = useI18n();
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -20,7 +22,6 @@ export default function CopyButton({ textToCopy, label, className = "" }: CopyBu
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(textToCopy);
       } else {
-        // Fallback cho trình duyệt cũ
         const textArea = document.createElement("textarea");
         textArea.value = textToCopy;
         textArea.style.position = "fixed";
@@ -43,8 +44,8 @@ export default function CopyButton({ textToCopy, label, className = "" }: CopyBu
     <button
       onClick={handleCopy}
       type="button"
-      title={copied ? "Đã sao chép!" : "Sao chép"}
-      aria-label={label || "Sao chép"}
+      title={copied ? t.card.copied : t.card.copyCode}
+      aria-label={label || t.card.copyCode}
       className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg transition-all ${
         copied
           ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700"
@@ -54,7 +55,7 @@ export default function CopyButton({ textToCopy, label, className = "" }: CopyBu
       {copied ? (
         <>
           <Check className="w-3.5 h-3.5 text-emerald-500" />
-          <span>{label ? "Đã sao chép!" : ""}</span>
+          <span>{label ? t.card.copied : ""}</span>
         </>
       ) : (
         <>

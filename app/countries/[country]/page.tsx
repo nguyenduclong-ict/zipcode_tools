@@ -4,8 +4,6 @@ import HomeClient from "@/components/HomeClient";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-export const runtime = "edge";
-
 interface Props {
   params: Promise<{ country: string }>;
 }
